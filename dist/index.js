@@ -1,5 +1,6 @@
-import require$$0 from 'os';
-import require$$0$1 from 'crypto';
+import require$$0$1 from 'os';
+import * as require$$0 from 'crypto';
+import require$$0__default from 'crypto';
 import require$$1 from 'fs';
 import require$$1$4 from 'path';
 import require$$2 from 'http';
@@ -111,7 +112,7 @@ function requireCommand () {
 	};
 	Object.defineProperty(command, "__esModule", { value: true });
 	command.issue = command.issueCommand = void 0;
-	const os = __importStar(require$$0);
+	const os = __importStar(require$$0$1);
 	const utils_1 = requireUtils$1();
 	/**
 	 * Commands
@@ -219,9 +220,9 @@ function requireFileCommand () {
 	fileCommand.prepareKeyValueMessage = fileCommand.issueFileCommand = void 0;
 	// We use any as a valid input type
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	const crypto = __importStar(require$$0$1);
+	const crypto = __importStar(require$$0__default);
 	const fs = __importStar(require$$1);
-	const os = __importStar(require$$0);
+	const os = __importStar(require$$0$1);
 	const utils_1 = requireUtils$1();
 	function issueFileCommand(command, message) {
 	    const filePath = process.env[`GITHUB_${command}`];
@@ -25206,7 +25207,7 @@ function requireSummary () {
 		};
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.summary = exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
-		const os_1 = require$$0;
+		const os_1 = require$$0$1;
 		const fs_1 = require$$1;
 		const { access, appendFile, writeFile } = fs_1.promises;
 		exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
@@ -26095,7 +26096,7 @@ function requireToolrunner () {
 	};
 	Object.defineProperty(toolrunner, "__esModule", { value: true });
 	toolrunner.argStringToArray = toolrunner.ToolRunner = void 0;
-	const os = __importStar(require$$0);
+	const os = __importStar(require$$0$1);
 	const events = __importStar(require$$4);
 	const child = __importStar(require$$2$2);
 	const path = __importStar(require$$1$4);
@@ -26838,7 +26839,7 @@ function requirePlatform () {
 		};
 		Object.defineProperty(exports, "__esModule", { value: true });
 		exports.getDetails = exports.isLinux = exports.isMacOS = exports.isWindows = exports.arch = exports.platform = void 0;
-		const os_1 = __importDefault(require$$0);
+		const os_1 = __importDefault(require$$0$1);
 		const exec = __importStar(requireExec());
 		const getWindowsInfo = () => __awaiter(void 0, void 0, void 0, function* () {
 		    const { stdout: version } = yield exec.getExecOutput('powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Version"', undefined, {
@@ -26941,7 +26942,7 @@ function requireCore () {
 		const command_1 = requireCommand();
 		const file_command_1 = requireFileCommand();
 		const utils_1 = requireUtils$1();
-		const os = __importStar(require$$0);
+		const os = __importStar(require$$0$1);
 		const path = __importStar(require$$1$4);
 		const oidc_utils_1 = requireOidcUtils();
 		/**
@@ -27254,41 +27255,139 @@ function requireCore () {
 var coreExports = requireCore();
 
 /**
- * Waits for a number of milliseconds.
- *
- * @param milliseconds The number of milliseconds to wait.
- * @returns Resolves with 'done!' after the wait is over.
- */
-async function wait(milliseconds) {
-    return new Promise((resolve) => {
-        if (isNaN(milliseconds))
-            throw new Error('milliseconds is not a number');
-        setTimeout(() => resolve('done!'), milliseconds);
-    });
-}
-
-/**
  * The main function for the action.
  *
  * @returns Resolves when the action is complete.
  */
 async function run() {
     try {
-        const ms = coreExports.getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        coreExports.debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        coreExports.debug(new Date().toTimeString());
-        await wait(parseInt(ms, 10));
-        coreExports.debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        coreExports.setOutput('time', new Date().toTimeString());
+        const apiUrl = coreExports.getInput('api-url') || 'https://ngapi.cdnetworks.com';
+        const apiUser = coreExports.getInput('api-user', { required: true });
+        const apiKey = coreExports.getInput('api-key', { required: true });
+        const domainId = coreExports.getInput('domain-id', { required: true });
+        const onBehalfOf = coreExports.getInput('on-behalf-of');
+        const name = coreExports.getInput('name');
+        const fileHeaders = coreExports.getInput('file-headers');
+        const action = coreExports.getInput('action') || 'invalidate';
+        const target = coreExports.getInput('target', { required: true });
+        const fileUrls = coreExports.getInput('file-urls');
+        const dirUrls = coreExports.getInput('dir-urls');
+        const regexPatterns = coreExports.getInput('regex-patterns');
+        if (!fileUrls && !dirUrls && !regexPatterns) {
+            throw new Error('At least one of file-urls, dir-urls, or regex-patterns must be provided');
+        }
+        if (!['delete', 'invalidate'].includes(action)) {
+            throw new Error('action must be either "delete" or "invalidate"');
+        }
+        if (!['staging', 'production'].includes(target)) {
+            throw new Error('target must be either "staging" or "production"');
+        }
+        const purgeRequest = {
+            action,
+            target
+        };
+        if (fileUrls) {
+            purgeRequest.fileUrls = fileUrls
+                .split('\n')
+                .map((url) => url.trim())
+                .filter(Boolean);
+        }
+        if (dirUrls) {
+            purgeRequest.dirUrls = dirUrls
+                .split('\n')
+                .map((url) => url.trim())
+                .filter(Boolean);
+        }
+        if (regexPatterns) {
+            purgeRequest.regexPatterns = regexPatterns
+                .split('\n')
+                .map((pattern) => pattern.trim())
+                .filter(Boolean);
+        }
+        if (name) {
+            purgeRequest.name = name;
+        }
+        if (fileHeaders) {
+            try {
+                const parsedHeaders = JSON.parse(fileHeaders);
+                if (typeof parsedHeaders === 'object' && !Array.isArray(parsedHeaders) && parsedHeaders !== null) {
+                    purgeRequest.fileHeaders = Object.entries(parsedHeaders).map(([name, value]) => ({
+                        name,
+                        value: String(value)
+                    }));
+                }
+                else {
+                    throw new Error('file-headers must be an object');
+                }
+            }
+            catch (error) {
+                throw new Error(`Invalid file-headers JSON: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        }
+        coreExports.info(`Initiating purge request for domain: ${domainId}`);
+        coreExports.info(`Action: ${purgeRequest.action}`);
+        coreExports.info(`Target: ${purgeRequest.target}`);
+        coreExports.info(`Files: ${purgeRequest.fileUrls?.length || 0}`);
+        coreExports.info(`Directories: ${purgeRequest.dirUrls?.length || 0}`);
+        coreExports.info(`Regex patterns: ${purgeRequest.regexPatterns?.length || 0}`);
+        coreExports.info(`File headers: ${purgeRequest.fileHeaders?.length || 0}`);
+        const date = new Date().toUTCString();
+        const password = generatePassword(apiKey, date);
+        const auth = Buffer.from(`${apiUser}:${password}`).toString('base64');
+        const headers = {
+            'Content-Type': 'application/json',
+            Authorization: `Basic ${auth}`,
+            Date: date,
+            Accept: 'application/json'
+        };
+        if (onBehalfOf) {
+            headers['On-Behalf-Of'] = onBehalfOf;
+        }
+        const response = await fetch(`${apiUrl}/domains/${domainId}/purge`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(purgeRequest)
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        const result = (await response.json());
+        coreExports.info(`Purge request submitted successfully`);
+        coreExports.info(`Purge ID: ${result.purgeId}`);
+        coreExports.info(`Status: ${result.status}`);
+        if (result.message) {
+            coreExports.info(`Message: ${result.message}`);
+        }
+        coreExports.setOutput('purge-id', result.purgeId);
+        coreExports.setOutput('status', result.status);
+        coreExports.setOutput('message', result.message || '');
+        coreExports.summary
+            .addHeading('CDNetworks Purge Request')
+            .addTable([
+            [
+                { data: 'Property', header: true },
+                { data: 'Value', header: true }
+            ],
+            ['Purge ID', result.purgeId],
+            ['Status', result.status],
+            ['Domain ID', domainId],
+            ['Files', purgeRequest.fileUrls?.length?.toString() || '0'],
+            ['Directories', purgeRequest.dirUrls?.length?.toString() || '0'],
+            [
+                'Regex Patterns',
+                purgeRequest.regexPatterns?.length?.toString() || '0'
+            ]
+        ])
+            .write();
     }
     catch (error) {
-        // Fail the workflow run if an error occurs
-        if (error instanceof Error)
-            coreExports.setFailed(error.message);
+        const message = error instanceof Error ? error.message : String(error);
+        coreExports.setFailed(`Action failed: ${message}`);
     }
+}
+function generatePassword(apiKey, date) {
+    return require$$0.createHmac('sha1', apiKey).update(date).digest('base64');
 }
 
 /**

@@ -1,23 +1,61 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: CDNetworks Purge
+description: Purge CDN cache using CDNetworks API
+author: CDNetworks
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: heart
-  color: red
+  icon: trash-2
+  color: blue
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  api-url:
+    description: CDNetworks API base URL (e.g., https://ngapi.cdnetworks.com)
+    required: false
+    default: https://ngapi.cdnetworks.com
+  api-user:
+    description: CDNetworks API user name
     required: true
-    default: '1000'
+  api-key:
+    description: CDNetworks API key
+    required: true
+  domain-id:
+    description: Domain ID to purge
+    required: true
+  file-urls:
+    description: File URLs to purge (one per line)
+    required: false
+  dir-urls:
+    description: Directory URLs to purge (one per line)
+    required: false
+  regex-patterns:
+    description: Regex patterns for purging (one per line)
+    required: false
+  on-behalf-of:
+    description: Child customer ID for reseller accounts
+    required: false
+  name:
+    description: A description of the purge request
+    required: false
+  file-headers:
+    description: JSON object of HTTP headers for cache key dependencies (e.g., {"User-Agent":"mobile","Accept-Language":"en-US"})
+    required: false
+  action:
+    description: Controls whether cached files should be removed (delete) or flagged as invalid (invalidate)
+    required: false
+    default: invalidate
+  target:
+    description: Specify if the purge request applies to the staging or production environment
+    required: true
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  purge-id:
+    description: Unique identifier for the purge request
+  status:
+    description: Status of the purge request
+  message:
+    description: Additional message from the API response
 
 runs:
   using: node24
