@@ -25,9 +25,9 @@ describe('main.ts', () => {
         'api-user': 'test-user',
         'api-key': 'test-key',
         'domain-id': 'test-domain',
-        'target': 'staging',
+        target: 'staging',
         'file-urls': 'https://example.com/file1.txt',
-        'action': 'invalidate'
+        action: 'invalidate'
       }
       return inputs[name] || ''
     })
@@ -53,7 +53,10 @@ describe('main.ts', () => {
     // Verify the purge-id output was set.
     expect(core.setOutput).toHaveBeenCalledWith('purge-id', 'test-purge-id-123')
     expect(core.setOutput).toHaveBeenCalledWith('status', 'pending')
-    expect(core.setOutput).toHaveBeenCalledWith('message', 'Purge request submitted')
+    expect(core.setOutput).toHaveBeenCalledWith(
+      'message',
+      'Purge request submitted'
+    )
   })
 
   it('Sets a failed status for invalid action', async () => {
@@ -63,9 +66,9 @@ describe('main.ts', () => {
         'api-user': 'test-user',
         'api-key': 'test-key',
         'domain-id': 'test-domain',
-        'target': 'staging',
+        target: 'staging',
         'file-urls': 'https://example.com/file1.txt',
-        'action': 'invalid-action'
+        action: 'invalid-action'
       }
       return inputs[name] || ''
     })

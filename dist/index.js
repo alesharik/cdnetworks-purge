@@ -27310,7 +27310,9 @@ async function run() {
         if (fileHeaders) {
             try {
                 const parsedHeaders = JSON.parse(fileHeaders);
-                if (typeof parsedHeaders === 'object' && !Array.isArray(parsedHeaders) && parsedHeaders !== null) {
+                if (typeof parsedHeaders === 'object' &&
+                    !Array.isArray(parsedHeaders) &&
+                    parsedHeaders !== null) {
                     purgeRequest.fileHeaders = Object.entries(parsedHeaders).map(([name, value]) => ({
                         name,
                         value: String(value)
