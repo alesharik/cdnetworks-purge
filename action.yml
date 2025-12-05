@@ -38,14 +38,20 @@ inputs:
     description: A description of the purge request
     required: false
   file-headers:
-    description: JSON object of HTTP headers for cache key dependencies (e.g., {"User-Agent":"mobile","Accept-Language":"en-US"})
+    description:
+      JSON object of HTTP headers for cache key dependencies (e.g.,
+      {"User-Agent":"mobile","Accept-Language":"en-US"})
     required: false
   action:
-    description: Controls whether cached files should be removed (delete) or flagged as invalid (invalidate)
+    description:
+      Controls whether cached files should be removed (delete) or flagged as
+      invalid (invalidate)
     required: false
     default: invalidate
   target:
-    description: Specify if the purge request applies to the staging or production environment
+    description:
+      Specify if the purge request applies to the staging or production
+      environment
     required: true
 
 # Define your outputs here.

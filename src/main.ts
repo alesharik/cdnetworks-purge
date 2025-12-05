@@ -50,15 +50,11 @@ export async function run(): Promise<void> {
     }
 
     if (!['delete', 'invalidate'].includes(action)) {
-      throw new Error(
-        'action must be either "delete" or "invalidate"'
-      )
+      throw new Error('action must be either "delete" or "invalidate"')
     }
 
     if (!['staging', 'production'].includes(target)) {
-      throw new Error(
-        'target must be either "staging" or "production"'
-      )
+      throw new Error('target must be either "staging" or "production"')
     }
 
     const purgeRequest: PurgeRequest = {
@@ -94,16 +90,24 @@ export async function run(): Promise<void> {
     if (fileHeaders) {
       try {
         const parsedHeaders = JSON.parse(fileHeaders)
-        if (typeof parsedHeaders === 'object' && !Array.isArray(parsedHeaders) && parsedHeaders !== null) {
-          purgeRequest.fileHeaders = Object.entries(parsedHeaders).map(([name, value]) => ({
-            name,
-            value: String(value)
-          }))
+        if (
+          typeof parsedHeaders === 'object' &&
+          !Array.isArray(parsedHeaders) &&
+          parsedHeaders !== null
+        ) {
+          purgeRequest.fileHeaders = Object.entries(parsedHeaders).map(
+            ([name, value]) => ({
+              name,
+              value: String(value)
+            })
+          )
         } else {
           throw new Error('file-headers must be an object')
         }
       } catch (error) {
-        throw new Error(`Invalid file-headers JSON: ${error instanceof Error ? error.message : String(error)}`)
+        throw new Error(
+          `Invalid file-headers JSON: ${error instanceof Error ? error.message : String(error)}`
+        )
       }
     }
 
