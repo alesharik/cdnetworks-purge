@@ -50,8 +50,7 @@ inputs:
     default: invalidate
   target:
     description:
-      Specify if the purge request applies to the staging or production
-      environment
+      Target environment for the purge request (production or staging)
     required: true
 
 # Define your outputs here.
