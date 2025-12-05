@@ -20,43 +20,61 @@ const { run } = await import('../src/main.js')
 describe('main.ts', () => {
   beforeEach(() => {
     // Set the action's inputs as return values from core.getInput().
-    core.getInput.mockImplementation(() => '500')
+    core.getInput.mockImplementation((name: string) => {
+      const inputs: Record<string, string> = {
+        'api-user': 'test-user',
+        'api-key': 'test-key',
+        'domain-id': 'test-domain',
+        'target': 'staging',
+        'file-urls': 'https://example.com/file1.txt',
+        'action': 'invalidate'
+      }
+      return inputs[name] || ''
+    })
 
-    // Mock the wait function so that it does not actually wait.
-    wait.mockImplementation(() => Promise.resolve('done!'))
+    // Mock fetch to return successful response
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        purgeId: 'test-purge-id-123',
+        status: 'pending',
+        message: 'Purge request submitted'
+      })
+    })
   })
 
   afterEach(() => {
     jest.resetAllMocks()
   })
 
-  it('Sets the time output', async () => {
+  it('Sets the purge outputs', async () => {
     await run()
 
-    // Verify the time output was set.
-    expect(core.setOutput).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      // Simple regex to match a time string in the format HH:MM:SS.
-      expect.stringMatching(/^\d{2}:\d{2}:\d{2}/)
-    )
+    // Verify the purge-id output was set.
+    expect(core.setOutput).toHaveBeenCalledWith('purge-id', 'test-purge-id-123')
+    expect(core.setOutput).toHaveBeenCalledWith('status', 'pending')
+    expect(core.setOutput).toHaveBeenCalledWith('message', 'Purge request submitted')
   })
 
-  it('Sets a failed status', async () => {
-    // Clear the getInput mock and return an invalid value.
-    core.getInput.mockClear().mockReturnValueOnce('this is not a number')
-
-    // Clear the wait mock and return a rejected promise.
-    wait
-      .mockClear()
-      .mockRejectedValueOnce(new Error('milliseconds is not a number'))
+  it('Sets a failed status for invalid action', async () => {
+    // Mock getInput to return invalid action
+    core.getInput.mockImplementation((name: string) => {
+      const inputs: Record<string, string> = {
+        'api-user': 'test-user',
+        'api-key': 'test-key',
+        'domain-id': 'test-domain',
+        'target': 'staging',
+        'file-urls': 'https://example.com/file1.txt',
+        'action': 'invalid-action'
+      }
+      return inputs[name] || ''
+    })
 
     await run()
 
     // Verify that the action was marked as failed.
-    expect(core.setFailed).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds is not a number'
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'Action failed: action must be either "delete" or "invalidate"'
     )
   })
 })
